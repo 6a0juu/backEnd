@@ -26,7 +26,6 @@ type Stud struct {
 }
 
 type Studss struct {
-	// May not used
 	Studs []Stud `json:"studs"`
 }
 
