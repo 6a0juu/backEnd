@@ -18,11 +18,10 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 type Stud struct {
 	// The main identifier for the Book. This will be unique.
-	SID    string `json:"sid"`
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	Tel    int    `json:"tel"`
-	OriSID string `json:"orisid"`
+	SID   string `json:"sid"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Tel   int    `json:"tel"`
 }
 
 type Studss struct {
@@ -31,10 +30,11 @@ type Studss struct {
 
 type StudIn struct {
 	// The main identifier for the Book. This will be unique.
-	SID   string `json:"sid"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Tel   int    `json:"tel"`
+	SID    string `json:"sid"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Tel    int    `json:"tel"`
+	OriSID string `json:"orisid"`
 }
 
 type User struct {
@@ -174,15 +174,58 @@ func UserDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 }
 
 func ItemAdd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	fmt.Println("afwafw")
+	err, tmpItem := populateStrFromHandler(w, r, params)
+	if err != nil {
+		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+		return
+	}
+	fmt.Println(tmpItem)
+	retCode, retData := sdb("add", tmpItem)
+	fmt.Println(retCode, retData)
+	if retCode != 0 {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "*")
+	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
 }
 
 func ItemDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	fmt.Println("afwafw")
+	err, tmpItem := populateStrFromHandler(w, r, params)
+	if err != nil {
+		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+		return
+	}
+	retCode, retData := sdb("del", tmpItem)
+	fmt.Println(retCode, retData)
+	if retCode != 0 {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "*")
+	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
 }
 
 func ItemUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	fmt.Println("afwafw")
+	err, tmpItem := populateStrFromHandler(w, r, params)
+	if err != nil {
+		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+		return
+	}
+	retCode, retData := sdb("edt", tmpItem)
+	fmt.Println(retCode, retData)
+	if retCode != 0 {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Add("Access-Control-Allow-Headers", "*")
+	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
 }
 
 func MultiSearch(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -214,27 +257,31 @@ func writeErrorResponse(w http.ResponseWriter, errorCode int, errorMsg string) {
 func populateModelFromHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, model interface{}) error {
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
+		fmt.Println(1, err)
 		return err
 	}
 	if err := r.Body.Close(); err != nil {
+		fmt.Println(2, err)
 		return err
 	}
 	if err := json.Unmarshal(body, model); err != nil {
+		fmt.Println(3, err)
 		return err
 	}
 	return nil
 }
 
-func populateStrFromHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, body []byte) error {
+func populateStrFromHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) (error, []byte) {
 	var err error
+	var body []byte
 	body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
-		return err
+		return err, body
 	}
 	if err := r.Body.Close(); err != nil {
-		return err
+		return err, body
 	}
-	return nil
+	return nil, body
 }
 
 /*

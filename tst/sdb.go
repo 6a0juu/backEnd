@@ -3,33 +3,47 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func readForm(qStr []byte) Studss {
-	var studf Studss
-	err := json.Unmarshal(qStr, &studf)
-	if err != nil {
-		log.Println(err)
-	}
-	return studf
-}
+//addStud delStud edtStud pAdd pDel pSer (ser)
 
-func addStud(qStr []byte) int {
-	mod := Stud{}
-	err := json.Unmarshal(qStr, mod)
+func serStud(mod Stud) int {
+	// ret: 0 for all paired, 1 for username paired, 2 for nothing paired
+	nMod := Stud{}
+	err = db.QueryRow("SELECT * FROM stud_table WHERE sid = ?", mod.SID).Scan(&nMod.SID, &nMod.Name, &nMod.Email, &nMod.Tel)
 	if err != nil {
 		log.Println(err)
 		return 1
 	}
+	if nMod.SID != "" && (nMod.SID == mod.SID) {
+		return 0
+	}
+	return 1
+}
+
+func addStud(qStr []byte) int {
+	mod := Stud{}
+	fmt.Println(qStr)
+	err := json.Unmarshal(qStr, &mod)
+	if err != nil {
+		log.Println(err)
+		return 1
+	}
+	ret := serStud(mod)
+	if ret != 1 {
+		return 4
+	}
+
 	stmt, err := db.Prepare("INSERT stud_table SET sid=?, name=?, tel=?, email=?")
 	if err != nil {
 		log.Println(err)
 		return 2
 	}
-	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel, mod.SID)
+	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
 	log.Println(res)
 	if err != nil {
 		log.Println(err)
@@ -39,50 +53,103 @@ func addStud(qStr []byte) int {
 	return 0
 }
 
-func delStud(qStr []byte) (int, []byte) {
+func delStud(qStr []byte) int {
 	mod := Stud{}
 	err := json.Unmarshal(qStr, mod)
+	if err != nil {
+		log.Println(err)
+		return 1
+	}
+
+	ret := serStud(mod)
+	if ret != 0 {
+		return 4
+	}
+
 	stmt, err := db.Prepare("DELETE FROM stud_table WHERE sid=?, name=?, tel=?, email=?")
 	log.Println(stmt, err)
-	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel, mod.SID)
-	log.Println(res, err)
-
-	return 0, qStr
-}
-
-func edtStud(qStr []byte) (int, []byte) {
-	mod := Stud{}
-	err := json.Unmarshal(qStr, mod)
-	stmt, err := db.Prepare("UPDATE stud_table SET sid=?, name=?, tel=?, email=? WHERE sid = ?")
-	log.Println(stmt, err)
-	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel, mod.SID)
-	log.Println(res, err)
-
-	return 0, qStr
-}
-
-func serStud(qStr []byte) (int, []byte) {
-	// ret: 0 for all paired, 1 for username paired, 2 for nothing paired
-	mod := Stud{}
-	nMod := Stud{}
-	err := json.Unmarshal(qStr, mod)
-	err = db.QueryRow("SELECT * FROM stud_table WHERE sid LIKE ?", mod.SID).Scan(&nMod.SID, &nMod.Name, &nMod.Tel, &nMod.Email)
-	log.Println(err)
-	retData, err := json.Marshal(nMod)
 	if err != nil {
-		return 2, retData
-	} else if nMod.SID != "" && (nMod.SID == mod.SID) {
-		return 0, retData
+		log.Println(err)
+		return 2
 	}
-	return 1, retData
+	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
+	log.Println(res, err)
+	if err != nil {
+		log.Println(err)
+		return 3
+	}
+	return 0
 }
 
-func pAddStud(qStr []byte) (int, []byte) {
-	return 1, qStr
+func edtStud(qStr []byte) int {
+	mod := StudIn{}
+	err := json.Unmarshal(qStr, mod)
+	if err != nil {
+		log.Println(err)
+		return 1
+	}
+	stmt, err := db.Prepare("UPDATE stud_table SET sid=?, name=?, tel=?, email=? WHERE sid = ?")
+	log.Println(stmt)
+	if err != nil {
+		log.Println(err)
+		return 2
+	}
+	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel, mod.OriSID)
+	log.Println(res)
+	if err != nil {
+		log.Println(err)
+		return 3
+	}
+
+	return 0
 }
 
-func pDelStud(qStr []byte) (int, []byte) {
-	return 1, qStr
+func pAddStud(qStr []byte) int {
+	var mods []Stud
+	err := json.Unmarshal(qStr, mods)
+	if err != nil {
+		return -1
+	}
+	for ind, mod := range mods {
+		res := serStud(mod)
+		if res != 1 {
+			return ind + 1
+		}
+		log.Println(ind, mod.SID, mod.Name, mod.Email, mod.Tel)
+		stmt, err := db.Prepare("INSERT stud_table SET sid=?, name=?, tel=?, email=?")
+		if err != nil {
+			return ind + 1
+		}
+		_, err = stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
+		if err != nil {
+			return ind + 1
+		}
+	}
+	return 0
+}
+
+func pDelStud(qStr []byte) int {
+	var mods []Stud
+	err := json.Unmarshal(qStr, mods)
+	if err != nil {
+		return -1
+	}
+	for ind, mod := range mods {
+		res := serStud(mod)
+		if res != 0 {
+			return ind + 1
+		}
+		log.Println(ind, mod.SID, mod.Name, mod.Email, mod.Tel)
+		stmt, err := db.Prepare("DELETE FROM stud_table WHERE sid=?, name=?, tel=?, email=?")
+		if err != nil {
+			return ind + 1
+		}
+		_, err = stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
+		if err != nil {
+			return ind + 1
+		}
+	}
+	return 0
 }
 
 func pSerStud(qStr []byte) (int, []byte) {
@@ -106,8 +173,6 @@ func pSerStud(qStr []byte) (int, []byte) {
 		return 1, retData
 	}
 	return 0, retData
-
-	return 1, qStr
 }
 
 func retAll() (int, []byte) {
@@ -140,19 +205,15 @@ func sdb(op string, qStr []byte) (int, []byte) {
 	}
 	switch op {
 	case "add":
-		retCode, retData = addStud(qStr)
+		retCode = addStud(qStr)
 	case "del":
-		retCode, retData = delStud(qStr)
+		retCode = delStud(qStr)
 	case "edt":
-		retCode, retData = edtStud(qStr)
-	case "ser":
-		retCode, retData = serStud(qStr)
+		retCode = edtStud(qStr)
 	case "pAdd":
-		retCode, retData = pAddStud(qStr)
+		retCode = pAddStud(qStr)
 	case "pDel":
-		retCode, retData = pDelStud(qStr)
-	case "pEdt":
-		retCode, retData = pEdtStud(qStr)
+		retCode = pDelStud(qStr)
 	case "pSer":
 		retCode, retData = pSerStud(qStr)
 	}
