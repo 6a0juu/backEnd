@@ -25,9 +25,11 @@ func main() {
 	router.POST("/api/login", SignIn)
 	router.OPTIONS("/api/login", SignIn)
 	router.POST("/api/user", SignUp)
+	router.OPTIONS("/api/user", SignUp)
 	router.PUT("/api/user", UserUpdate)
 	router.DELETE("/api/user", UserDelete)
 	router.POST("/api/item", ItemAdd)
+	router.OPTIONS("/api/item", ItemAdd)
 	router.DELETE("/api/item", ItemDelete)
 	router.PUT("/api/item", ItemUpdate)
 	/*

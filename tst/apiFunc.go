@@ -96,6 +96,17 @@ func SignIn(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	if origin := r.Header.Get("Origin"); origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	}
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	tmpUser := &User{}
 	if err := populateModelFromHandler(w, r, params, tmpUser); err != nil {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
@@ -118,6 +129,7 @@ func SignUp(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 }
 
 func UserUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+
 	// Update user, pending
 	tmpUser := &User{}
 	if err := populateModelFromHandler(w, r, params, tmpUser); err != nil {
@@ -168,6 +180,17 @@ func UserDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 }
 
 func ItemAdd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	if origin := r.Header.Get("Origin"); origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	}
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	err, tmpItem := populateStrFromHandler(w, r, params)
 	if err != nil {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
