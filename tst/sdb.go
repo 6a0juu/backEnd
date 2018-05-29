@@ -56,6 +56,7 @@ func addStud(qStr []byte) int {
 
 func delStud(qStr []byte) int {
 	mod := Stud{}
+	fmt.Println("123", qStr, "456")
 	err := json.Unmarshal(qStr, &mod)
 	if err != nil {
 		log.Println(err)
@@ -198,8 +199,6 @@ func retAll() (int, []byte) {
 		mod := Stud{}
 		rows.Scan(&mod.SID, &mod.Name, &mod.Email, &mod.Tel)
 		Studs = append(Studs, mod)
-
-		log.Println(Studs)
 	}
 	retData, err := json.Marshal(Studs)
 	if err != nil {

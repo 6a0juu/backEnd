@@ -63,12 +63,10 @@ type ApiErr struct {
 }
 
 func SignIn(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	if origin := r.Header.Get("Origin"); origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
@@ -89,19 +87,15 @@ func SignIn(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-
-	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
 }
 
 func SignUp(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	if origin := r.Header.Get("Origin"); origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
@@ -124,7 +118,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -150,6 +143,9 @@ func UserUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	}
 	//if searchUser(tmpUser.Usnm) {OK} else {gg}
 	//if updateUser(tmpUser.Usnm, tmpUser.Pswd) {OK} else {gg}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -175,17 +171,20 @@ func UserDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	}
 	//if searchUser(tmpUser.Usnm, tmpUser.Pswd) {OK} else {gg}
 	//if deleteUser(tmpUser.Usnm, tmpUser.Pswd) {OK} else {gg}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
 func ItemAdd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	if origin := r.Header.Get("Origin"); origin != "" {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	}
+	//fmt.Println("cdsavgregrafasdcsacdsafds")
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
@@ -204,16 +203,24 @@ func ItemAdd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
 func ItemDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 	err, tmpItem := populateStrFromHandler(w, r, params)
 	if err != nil {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
+	fmt.Println("123", tmpItem, "4567")
 	retCode, _ := sdb("del", tmpItem)
 	//fmt.Println(retCode, retData)
 	if retCode == 4 {
@@ -223,7 +230,6 @@ func ItemDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -242,6 +248,9 @@ func ItemUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -251,6 +260,15 @@ func MultiSearch(w http.ResponseWriter, r *http.Request, params httprouter.Param
 }
 
 func RetAll(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
 	err, tmpItem := populateStrFromHandler(w, r, params)
 	if err != nil {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
@@ -265,13 +283,11 @@ func RetAll(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
 
 // Writes the response as a standard JSON response with StatusOK
 func writeOKResponse(w http.ResponseWriter, m interface{}) {
-	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(&JsonRes{Data: m}); err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
@@ -280,7 +296,6 @@ func writeOKResponse(w http.ResponseWriter, m interface{}) {
 
 // Writes the error response as a Standard API JSON response with a response code
 func writeErrorResponse(w http.ResponseWriter, errorCode int, errorMsg string) {
-	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(errorCode)
 	json.NewEncoder(w).
 		Encode(&JsonErrRes{Error: &ApiErr{Status: errorCode, Title: errorMsg}})

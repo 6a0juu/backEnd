@@ -30,7 +30,8 @@ func main() {
 	router.DELETE("/api/user", UserDelete)
 	router.POST("/api/item", ItemAdd)
 	router.OPTIONS("/api/item", ItemAdd)
-	router.DELETE("/api/item", ItemDelete)
+	router.OPTIONS("/api/itemdel", ItemDelete)
+	router.PUT("/api/itemdel", ItemDelete)
 	router.PUT("/api/item", ItemUpdate)
 	/*
 		router.POST("/api/form", ItemAdd)
@@ -38,6 +39,7 @@ func main() {
 		router.PUT("/api/form", ItemUpdate)
 	*/
 	router.GET("/api/all", RetAll)
+	router.OPTIONS("/api/all", RetAll)
 	router.GET("/api/form", MultiSearch)
 
 	log.Fatal(http.ListenAndServe(":19845", router))
