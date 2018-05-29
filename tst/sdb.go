@@ -9,6 +9,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var Studs []Stud
+
 //addStud delStud edtStud pAdd pDel pSer (ser)
 
 func serStud(mod Stud) int {
@@ -27,7 +29,6 @@ func serStud(mod Stud) int {
 
 func addStud(qStr []byte) int {
 	mod := Stud{}
-	fmt.Println(qStr)
 	err := json.Unmarshal(qStr, &mod)
 	if err != nil {
 		log.Println(err)
@@ -38,13 +39,13 @@ func addStud(qStr []byte) int {
 		return 4
 	}
 
-	stmt, err := db.Prepare("INSERT stud_table SET sid=?, name=?, tel=?, email=?")
+	stmt, err := db.Prepare("INSERT stud_table SET sid=?, name=?, email=?, tel=?")
 	if err != nil {
 		log.Println(err)
 		return 2
 	}
-	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
-	log.Println(res)
+	_, err = stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
+	//log.Println(res)
 	if err != nil {
 		log.Println(err)
 		return 3
@@ -55,7 +56,7 @@ func addStud(qStr []byte) int {
 
 func delStud(qStr []byte) int {
 	mod := Stud{}
-	err := json.Unmarshal(qStr, mod)
+	err := json.Unmarshal(qStr, &mod)
 	if err != nil {
 		log.Println(err)
 		return 1
@@ -66,13 +67,13 @@ func delStud(qStr []byte) int {
 		return 4
 	}
 
-	stmt, err := db.Prepare("DELETE FROM stud_table WHERE sid=?, name=?, tel=?, email=?")
+	stmt, err := db.Prepare("DELETE FROM stud_table WHERE sid=?")
 	log.Println(stmt, err)
 	if err != nil {
 		log.Println(err)
 		return 2
 	}
-	res, err := stmt.Exec(mod.SID, mod.Name, mod.Email, mod.Tel)
+	res, err := stmt.Exec(mod.SID)
 	log.Println(res, err)
 	if err != nil {
 		log.Println(err)
@@ -83,12 +84,20 @@ func delStud(qStr []byte) int {
 
 func edtStud(qStr []byte) int {
 	mod := StudIn{}
-	err := json.Unmarshal(qStr, mod)
+	err := json.Unmarshal(qStr, &mod)
+	nMod := Stud{}
+	nMod.SID = mod.OriSID
 	if err != nil {
 		log.Println(err)
 		return 1
 	}
-	stmt, err := db.Prepare("UPDATE stud_table SET sid=?, name=?, tel=?, email=? WHERE sid = ?")
+	fmt.Println(nMod.SID)
+	ret := serStud(nMod)
+	if ret != 0 {
+		return 4
+	}
+
+	stmt, err := db.Prepare("UPDATE stud_table SET sid=?, name=?, email=?, tel=? WHERE sid = ?")
 	log.Println(stmt)
 	if err != nil {
 		log.Println(err)
@@ -106,7 +115,7 @@ func edtStud(qStr []byte) int {
 
 func pAddStud(qStr []byte) int {
 	var mods []Stud
-	err := json.Unmarshal(qStr, mods)
+	err := json.Unmarshal(qStr, &mods)
 	if err != nil {
 		return -1
 	}
@@ -116,7 +125,7 @@ func pAddStud(qStr []byte) int {
 			return ind + 1
 		}
 		log.Println(ind, mod.SID, mod.Name, mod.Email, mod.Tel)
-		stmt, err := db.Prepare("INSERT stud_table SET sid=?, name=?, tel=?, email=?")
+		stmt, err := db.Prepare("INSERT stud_table SET sid=?, name=?, email=?, tel=?")
 		if err != nil {
 			return ind + 1
 		}
@@ -130,7 +139,7 @@ func pAddStud(qStr []byte) int {
 
 func pDelStud(qStr []byte) int {
 	var mods []Stud
-	err := json.Unmarshal(qStr, mods)
+	err := json.Unmarshal(qStr, &mods)
 	if err != nil {
 		return -1
 	}
@@ -155,8 +164,8 @@ func pDelStud(qStr []byte) int {
 func pSerStud(qStr []byte) (int, []byte) {
 
 	mod := Stud{}
-	err := json.Unmarshal(qStr, mod)
-	rows, err := db.Query("SELECT * FROM stud_table WHERE sid LIKE ?, name LIKE ?, cast(tel as varchar(20)) LIKE ?, email LIKE ?", "%"+mod.SID+"%", "%"+mod.Name+"%", "%"+mod.Email+"%", "%"+string(mod.Tel)+"%", "%"+mod.SID+"%") //tel for char
+	err := json.Unmarshal(qStr, &mod)
+	rows, err := db.Query("SELECT * FROM stud_table WHERE sid LIKE ?, name LIKE ?, email LIKE ?, cast(tel as varchar(20)) LIKE ?", "%"+mod.SID+"%", "%"+mod.Name+"%", "%"+mod.Email+"%", "%"+string(mod.Tel)+"%") //tel for char
 	var xxxx []byte
 	if err != nil {
 		return 1, xxxx
@@ -165,7 +174,7 @@ func pSerStud(qStr []byte) (int, []byte) {
 	var Studs []Stud
 	it := 0
 	for rows.Next() {
-		rows.Scan(&mod.SID, &mod.Name, &mod.Tel, &mod.Email)
+		rows.Scan(&mod.SID, &mod.Name, &mod.Email, &mod.Tel)
 		Studs[it] = mod
 	}
 	retData, err := json.Marshal(Studs)
@@ -176,18 +185,21 @@ func pSerStud(qStr []byte) (int, []byte) {
 }
 
 func retAll() (int, []byte) {
-	mod := Stud{}
-	rows, err := db.Query("SELECT * FROM stud_table WHERE sid=?, name=?, tel=?, email=?", "%", "%", "%", "%")
+	var tmpstuds []Stud
+	Studs = tmpstuds
+	rows, err := db.Query("SELECT * FROM stud_table")
 	var xxxx []byte
 	if err != nil {
 		return 1, xxxx
 	}
 	defer rows.Close()
-	var Studs []Stud
-	it := 0
+	//it := 0
 	for rows.Next() {
-		rows.Scan(&mod.SID, &mod.Name, &mod.Tel, &mod.Email)
-		Studs[it] = mod
+		mod := Stud{}
+		rows.Scan(&mod.SID, &mod.Name, &mod.Email, &mod.Tel)
+		Studs = append(Studs, mod)
+
+		log.Println(Studs)
 	}
 	retData, err := json.Marshal(Studs)
 	if err != nil {
@@ -216,6 +228,8 @@ func sdb(op string, qStr []byte) (int, []byte) {
 		retCode = pDelStud(qStr)
 	case "pSer":
 		retCode, retData = pSerStud(qStr)
+	case "ret":
+		retCode, retData = retAll()
 	}
 	log.Println(retCode, retData)
 	defer studb.Close()

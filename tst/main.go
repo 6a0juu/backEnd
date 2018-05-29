@@ -31,32 +31,12 @@ func main() {
 	router.DELETE("/api/item", ItemDelete)
 	router.PUT("/api/item", ItemUpdate)
 	/*
-		router.POST("/api/item", ItemAdd)
-		router.DELETE("/api/item", ItemDelete)
-		router.PUT("/api/item", ItemUpdate)
+		router.POST("/api/form", ItemAdd)
+		router.DELETE("/api/form", ItemDelete)
+		router.PUT("/api/form", ItemUpdate)
 	*/
+	router.GET("/api/all", RetAll)
 	router.GET("/api/form", MultiSearch)
 
 	log.Fatal(http.ListenAndServe(":19845", router))
 }
-
-// Create a couple of sample Book entries
-/*
-	bookstore["123"] = &Book{
-		ISDN:   "123",
-		Title:  "Silence of the Lambs",
-		Author: "Thomas Harris",
-		Pages:  367,
-	}
-	bookstore["124"] = &Book{
-		ISDN:   "124",
-		Title:  "To Kill a Mocking Bird",
-		Author: "Harper Lee",
-		Pages:  320,
-	}
-
-
-	router.GET("/books", BookIndex)
-	router.GET("/books/:isdn", BookShow)
-	router.GET("/books/:isdn")
-*/

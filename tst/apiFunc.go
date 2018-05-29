@@ -113,8 +113,6 @@ func SignUp(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -140,8 +138,6 @@ func UserUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	}
 	//if searchUser(tmpUser.Usnm) {OK} else {gg}
 	//if updateUser(tmpUser.Usnm, tmpUser.Pswd) {OK} else {gg}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -167,8 +163,6 @@ func UserDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	}
 	//if searchUser(tmpUser.Usnm, tmpUser.Pswd) {OK} else {gg}
 	//if deleteUser(tmpUser.Usnm, tmpUser.Pswd) {OK} else {gg}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -179,15 +173,14 @@ func ItemAdd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	fmt.Println(tmpItem)
-	retCode, retData := sdb("add", tmpItem)
-	fmt.Println(retCode, retData)
-	if retCode != 0 {
+	retCode, _ := sdb("add", tmpItem)
+	if retCode == 4 {
+		writeErrorResponse(w, http.StatusConflict, "Conflict")
+		return
+	} else if retCode != 0 {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -198,14 +191,15 @@ func ItemDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	retCode, retData := sdb("del", tmpItem)
-	fmt.Println(retCode, retData)
-	if retCode != 0 {
+	retCode, _ := sdb("del", tmpItem)
+	//fmt.Println(retCode, retData)
+	if retCode == 4 {
+		writeErrorResponse(w, http.StatusNotFound, "Not Found")
+		return
+	} else if retCode != 0 {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -216,14 +210,15 @@ func ItemUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	retCode, retData := sdb("edt", tmpItem)
-	fmt.Println(retCode, retData)
-	if retCode != 0 {
+	retCode, _ := sdb("edt", tmpItem)
+	//fmt.Println(retCode, retData)
+	if retCode == 4 {
+		writeErrorResponse(w, http.StatusNotFound, "Not Found")
+		return
+	} else if retCode != 0 {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 }
@@ -232,10 +227,27 @@ func MultiSearch(w http.ResponseWriter, r *http.Request, params httprouter.Param
 	fmt.Println("afwafw")
 }
 
+func RetAll(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	err, tmpItem := populateStrFromHandler(w, r, params)
+	if err != nil {
+		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+		return
+	}
+	retCode, _ := sdb("ret", tmpItem)
+	if retCode != 0 {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	if err := json.NewEncoder(w).Encode(Studs); err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+}
+
 // Writes the response as a standard JSON response with StatusOK
 func writeOKResponse(w http.ResponseWriter, m interface{}) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(&JsonRes{Data: m}); err != nil {
@@ -245,8 +257,6 @@ func writeOKResponse(w http.ResponseWriter, m interface{}) {
 
 // Writes the error response as a Standard API JSON response with a response code
 func writeErrorResponse(w http.ResponseWriter, errorCode int, errorMsg string) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Add("Access-Control-Allow-Headers", "*")
 	w.Header().Add("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(errorCode)
 	json.NewEncoder(w).
