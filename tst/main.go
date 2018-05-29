@@ -34,13 +34,13 @@ func main() {
 	router.PUT("/api/itemdel", ItemDelete)
 	router.PUT("/api/item", ItemUpdate)
 	/*
-		router.POST("/api/form", ItemAdd)
-		router.DELETE("/api/form", ItemDelete)
-		router.PUT("/api/form", ItemUpdate)
+		router.OPTIONS("/api/csv", readCsv)
+		router.POST("/api/csv", readCsv)
 	*/
 	router.GET("/api/all", RetAll)
 	router.OPTIONS("/api/all", RetAll)
-	router.GET("/api/form", MultiSearch)
+	router.OPTIONS("/api/form", MultiSearch)
+	router.POST("/api/form", MultiSearch)
 
 	log.Fatal(http.ListenAndServe(":19845", router))
 }

@@ -220,7 +220,6 @@ func ItemDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	fmt.Println("123", tmpItem, "4567")
 	retCode, _ := sdb("del", tmpItem)
 	//fmt.Println(retCode, retData)
 	if retCode == 4 {
@@ -256,7 +255,57 @@ func ItemUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params
 }
 
 func MultiSearch(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	fmt.Println("afwafw")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	err, tmpItem := populateStrFromHandler(w, r, params)
+	if err != nil {
+		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+		return
+	}
+	retCode, _ := sdb("pSer", tmpItem)
+	if retCode != 0 {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	if err := json.NewEncoder(w).Encode(Studs); err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func readCsv(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	/*
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		err, tmpItem := populateStrFromHandler(w, r, params)
+		if err != nil {
+			writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+			return
+		}
+		retCode, _ := sdb("del", tmpItem)
+		//fmt.Println(retCode, retData)
+		if retCode == 4 {
+			writeErrorResponse(w, http.StatusNotFound, "Not Found")
+			return
+		} else if retCode != 0 {
+			writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+			return
+		}
+	*/
+	w.WriteHeader(http.StatusOK)
 }
 
 func RetAll(w http.ResponseWriter, r *http.Request, params httprouter.Params) {

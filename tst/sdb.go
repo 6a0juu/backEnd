@@ -163,23 +163,24 @@ func pDelStud(qStr []byte) int {
 }
 
 func pSerStud(qStr []byte) (int, []byte) {
-
+	var tmpstuds []Stud
+	Studs = tmpstuds
 	mod := Stud{}
 	err := json.Unmarshal(qStr, &mod)
-	rows, err := db.Query("SELECT * FROM stud_table WHERE sid LIKE ?, name LIKE ?, email LIKE ?, cast(tel as varchar(20)) LIKE ?", "%"+mod.SID+"%", "%"+mod.Name+"%", "%"+mod.Email+"%", "%"+string(mod.Tel)+"%") //tel for char
+	rows, err := db.Query("SELECT * FROM stud_table WHERE sid LIKE ? AND name LIKE ? AND email LIKE ?", "%"+mod.SID+"%", "%"+mod.Name+"%", "%"+mod.Email+"%") //tel for char
 	var xxxx []byte
 	if err != nil {
+		log.Println(err)
 		return 1, xxxx
 	}
 	defer rows.Close()
-	var Studs []Stud
-	it := 0
 	for rows.Next() {
 		rows.Scan(&mod.SID, &mod.Name, &mod.Email, &mod.Tel)
-		Studs[it] = mod
+		Studs = append(Studs, mod)
 	}
 	retData, err := json.Marshal(Studs)
 	if err != nil {
+		log.Println(err)
 		return 1, retData
 	}
 	return 0, retData
