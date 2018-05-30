@@ -28,6 +28,7 @@ func main() {
 	router.OPTIONS("/api/user", SignUp)
 	router.PUT("/api/user", UserUpdate)
 	router.DELETE("/api/user", UserDelete)
+	router.GET("/api/user", AllUser)
 	router.POST("/api/item", ItemAdd)
 	router.OPTIONS("/api/item", ItemAdd)
 	router.OPTIONS("/api/itemdel", ItemDelete)

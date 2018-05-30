@@ -77,8 +77,7 @@ func SignIn(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		return
 	}
 	fmt.Println(tmpUser.Usnm, tmpUser.Pswd)
-	retCode, retData := mdb(2, tmpUser)
-	fmt.Println(retCode, retData)
+	retCode := mdb(2, tmpUser)
 	if retCode != 0 {
 		writeErrorResponse(w, http.StatusNotAcceptable, "Not Acceptable")
 		return
@@ -106,14 +105,12 @@ func SignUp(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	retCode, retData := mdb(2, tmpUser)
-	fmt.Println(retCode, retData)
+	retCode := mdb(2, tmpUser)
 	if retCode != 2 {
 		writeErrorResponse(w, http.StatusConflict, "Conflict")
 		return
 	}
-	retCode, retData = mdb(1, tmpUser)
-	fmt.Println(retCode, retData)
+	retCode = mdb(1, tmpUser)
 	if retCode != 0 {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
@@ -129,14 +126,12 @@ func UserUpdate(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
 		return
 	}
-	retCode, retData := mdb(2, tmpUser)
-	fmt.Println(retCode, retData)
-	if retCode != 0 {
+	retCode := mdb(2, tmpUser)
+	if retCode != 1 {
 		writeErrorResponse(w, http.StatusNotAcceptable, "Not Acceptable")
 		return
 	}
-	retCode, retData = mdb(3, tmpUser)
-	fmt.Println(retCode, retData)
+	retCode = mdb(3, tmpUser)
 	if retCode != 0 {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
@@ -157,14 +152,12 @@ func UserDelete(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		return
 	}
 
-	retCode, retData := mdb(2, tmpUser)
-	fmt.Println(retCode, retData)
+	retCode := mdb(2, tmpUser)
 	if retCode != 0 {
 		writeErrorResponse(w, http.StatusNotAcceptable, "Not Acceptable")
 		return
 	}
-	retCode, retData = mdb(4, tmpUser)
-	fmt.Println(retCode, retData)
+	retCode = mdb(4, tmpUser)
 	if retCode != 0 {
 		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
 		return
@@ -305,6 +298,34 @@ func readCsv(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 			return
 		}
 	*/
+	w.WriteHeader(http.StatusOK)
+}
+
+func AllUser(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	tmpUser := &User{}
+	/*
+		if err := populateModelFromHandler(w, r, params, tmpUser); err != nil {
+			writeErrorResponse(w, http.StatusUnprocessableEntity, "Unprocessible Entity")
+			return
+		}
+	*/
+	retCode := mdb(5, tmpUser)
+	if retCode != 0 {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
+	if err := json.NewEncoder(w).Encode(Users); err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal Server Error")
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
