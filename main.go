@@ -1,62 +1,47 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"log"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/julienschmidt/httprouter"
 )
 
-type user struct {
-	username   string
-	password   string
-	permission string
-}
-
-func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	fmt.Fprint(w, "Welcome!\n")
-}
-
-func hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	fmt.Fprintf(w, "hello, %s!\n", ps.ByName("name"))
-}
-
-func getuser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	uid := ps.ByName("uid")
-	fmt.Fprintf(w, "you are get user %s", uid)
-}
-
-func modifyuser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	uid := ps.ByName("uid")
-	fmt.Fprintf(w, "you are modify user %s", uid)
-}
-
-func deleteuser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	uid := ps.ByName("uid")
-	fmt.Fprintf(w, "you are delete user %s", uid)
-}
-
-func adduser(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// uid := r.FormValue("uid")
-	uid := ps.ByName("uid")
-	fmt.Fprintf(w, "you are add user %s", uid)
-}
+var db *sql.DB
+var err error
 
 func main() {
+
+	db, err = sql.Open("mysql", "root:bjwdttz@tcp(127.0.0.1:3306)/tst?charset=utf8")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	router := httprouter.New()
+	router.GET("/", Index)
+
+	router.POST("/api/login", SignIn)
+	router.OPTIONS("/api/login", SignIn)
+	router.POST("/api/user", SignUp)
+	router.OPTIONS("/api/user", SignUp)
+	router.PUT("/api/user", UserUpdate)
+	router.DELETE("/api/user", UserDelete)
+	router.GET("/api/user", AllUser)
+	router.POST("/api/item", ItemAdd)
+	router.OPTIONS("/api/item", ItemAdd)
+	router.OPTIONS("/api/itemdel", ItemDelete)
+	router.PUT("/api/itemdel", ItemDelete)
+	router.PUT("/api/item", ItemUpdate)
 	/*
-		router := httprouter.New()
-		router.GET("/", Index)
-		router.GET("/hello/:name", Hello)
-
-		router.GET("/user/:uid", getuser)
-		router.POST("/adduser/:uid", adduser)
-		router.DELETE("/deluser/:uid", deleteuser)
-		router.PUT("/moduser/:uid", modifyuser)
-
-		log.Fatal(http.ListenAndServe(":9090", router))
+		router.OPTIONS("/api/csv", readCsv)
+		router.POST("/api/csv", readCsv)
 	*/
-	err, info := mdb()
-	fmt.Println(err)
-	fmt.Println(info)
+	router.GET("/api/all", RetAll)
+	router.OPTIONS("/api/all", RetAll)
+	router.OPTIONS("/api/form", MultiSearch)
+	router.POST("/api/form", MultiSearch)
+
+	log.Fatal(http.ListenAndServe(":19845", router))
 }

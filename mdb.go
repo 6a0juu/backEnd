@@ -1,89 +1,91 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func addUser(db *sql.DB, newUser user) {
-	stmt, err := db.Prepare("INSERT userinfo SET username=?, password=?")
-	fmt.Println(stmt)
-	fmt.Println(err)
-	res, err := stmt.Exec(newUser.username, "qwq", "qwq")
+var Users []User
+
+func addUser(newUser User) int {
+	stmt, err := db.Prepare("INSERT user_table SET username=?, password=?, permission=1")
+	fmt.Println(stmt, err)
+
+	res, err := stmt.Exec(newUser.Usnm, newUser.Pswd)
 	fmt.Println(res)
 	fmt.Println(err)
+	return 0
 }
 
-func searchUser(db *sql.DB, newUser user) int { //search needs all thing
-	rows, err := db.Query("SELECT * FROM user_table WHERE username = '" + newUser.username + "' AND password = '" + newUser.password + "'")
-	for rows.Next() {
-		var username string
-		var password string
-		var permission string
-		err = rows.Scan(&username, &password, &permission)
-
-		fmt.Println(newUser.username)
-		fmt.Println(newUser.password)
-		fmt.Println(permission)
-		if err != nil {
-			log.Fatal(err)
-			fmt.Println(2)
-
-			return 2
-			//return 1, "Database Connection Failed."
-		} else if newUser.username == username && newUser.password == password {
-			fmt.Println(0)
-			return 0
-		} else {
-			fmt.Println(1)
-
-			return 1
-		}
-
-	}
-	return 3
-}
-
-func updateUser(db *sql.DB, newUser user) {
-	stmt, err := db.Prepare("UPDATE userinfo SET username=?,departname=?,created=?")
-	fmt.Println(stmt)
+func searchUser(newUser User) int {
+	// ret: 0 for all paired, 1 for username paired, 2 for nothing paired
+	var username, password string
+	err := db.QueryRow("SELECT username, password FROM user_table WHERE username=?", newUser.Usnm).Scan(&username, &password)
 	fmt.Println(err)
-	res, err := stmt.Exec("qwq", "qwq", "qwq")
-	fmt.Println(res)
-	fmt.Println(err)
-}
-
-func deleteUser(db *sql.DB, newUser user) {
-	//delete where .. and .. and ..
-}
-
-func mdb() (int, string) {
-	retCode := 0
-	retData := "n"
-	newUser := user{"1", "1", "1"}
-
-	opCode := 2
-	db, err := sql.Open("mysql", "root:dttz1998@tcp(127.0.0.1:3306)/tst?charset=utf8")
 	if err != nil {
-		log.Fatal(err)
-		return 1, "Database Connection Failed."
+		return 2
 	}
+	if newUser.Usnm == username && newUser.Pswd == password {
+		return 0
+	} else if newUser.Usnm == username {
+		return 1
+	}
+	return 2
+}
+
+func updateUser(newUser User) int {
+	stmt, err := db.Prepare("UPDATE user_table SET password=? WHERE username=?")
+	fmt.Println(err)
+	res, err := stmt.Exec(newUser.Pswd, newUser.Usnm)
+	fmt.Println(res, err)
+	return 0
+}
+
+func deleteUser(newUser User) int {
+	//delete where .. and .. and ..
+	stmt, err := db.Prepare(`DELETE FROM user_table WHERE username=?`)
+	fmt.Println(err)
+	res, err := stmt.Exec(newUser.Usnm)
+	fmt.Println(res, err)
+	return 0
+}
+
+func allUser(newUser User) int {
+	var tmpusers []User
+	Users = tmpusers
+	rows, err := db.Query("SELECT username, password FROM user_table")
+	if err != nil {
+		return 1
+	}
+	defer rows.Close()
+	for rows.Next() {
+		mod := User{}
+		rows.Scan(&mod.Usnm, &mod.Pswd)
+		Users = append(Users, mod)
+	}
+	if err != nil {
+		return 1
+	}
+	return 0
+}
+
+func mdb(opCode int, newUser *User) int {
+	retCode := 0
 	switch opCode { //new user for test, must be changed
 	case 1:
-		addUser(db, newUser)
+		retCode = addUser(*newUser)
 	case 2:
-		retCode = searchUser(db, newUser)
+		retCode = searchUser(*newUser)
 	case 3:
-		updateUser(db, newUser)
+		retCode = updateUser(*newUser)
 	case 4:
-		deleteUser(db, newUser)
+		retCode = deleteUser(*newUser)
+	case 5:
+		retCode = allUser(*newUser)
 	}
 	/*
 
 	 */
-	defer db.Close()
-	return retCode, retData
+	return retCode
 }
