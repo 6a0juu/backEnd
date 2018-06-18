@@ -12,4 +12,9 @@ go build
 
 ### Run in shell
 ./backEnd
+
+### Or run in Windows
+./backEnd.exe
 ```
+
+For more infomation, please visit [GoDoc](https://www.godoc.org/) and [HTTPRouter](https://github.com/julienschmidt/httprouter).
